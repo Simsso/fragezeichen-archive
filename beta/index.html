@@ -7,7 +7,7 @@
   <meta name="description" content="Streamen Sie alle Folgen der drei Fragezeichen. Unterstützt FileDitch und Archive.org für ein nahtloses, werbefreies Hörerlebnis.">
   <meta name="theme-color" content="#050508">
   
-  <!-- Premium Fonts -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2504,7 +2504,7 @@
     return `
       <div style="max-width: 650px; display: flex; flex-direction: column; gap: 30px; animation: fadeIn 0.3s ease;">
         <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-          <h3 style="font-size: 18px; font-weight: 700;">HD-Medienbibliothek Status</h3>
+          <h3 style="font-size: 18px; font-weight: 700;">HD-Medienbibliothek Upload-Status</h3>
           <div style="display: flex; align-items: center; justify-content: space-between; font-size: 14px;">
             <span style="color: var(--muted);">FileDitch HD-Folgen:</span>
             <span style="font-weight: 700; color: var(--primary);">${localCount} / ${collections.length} (${percent}%)</span>
@@ -2513,22 +2513,7 @@
             <div style="width: ${percent}%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary-glow); border-radius:10px;"></div>
           </div>
           <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-top: 4px;">
-            Das Archiv streamt standardmäßig von archive.org. Sobald Sie Folgen über das Uploader-Skript hochgeladen haben, streamt die App in brillanter HD-Qualität von FileDitch.
-          </p>
-        </div>
-
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-          <h3 style="font-size: 18px; font-weight: 700;">Hörspiele hochladen</h3>
-          <p style="font-size: 14px; line-height: 1.5; color: #d1d0db;">
-            Um eigene Folgen in FileDitch einzupflegen, führen Sie das mitgelieferte Uploader-Skript aus:
-          </p>
-          <pre style="background: #000; border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--primary); overflow-x: auto; line-height: 1.5;">
-Double-click: upload.bat
-
-# Oder über PowerShell/Terminal:
-python upload.py [TargetFolder]</pre>
-          <p style="font-size: 13px; color: var(--muted); line-height: 1.5;">
-            Das Skript durchsucht Ihr Musik-Verzeichnis nach DDF-Ordnern (z.B. <code style="font-family:'JetBrains Mono'; color:#fff;">Die drei ??? - 001 - ...</code>), lädt diese hoch und generiert die Steuerdatei <code style="font-family:'JetBrains Mono'; color:#fff;">fileditch_tracks.json</code>.
+            Das Archiv streamt standardmäßig von FileDitch. Sobald eine Folge dort nicht vorhanden ist, erfolgt der Stream wieder über archive.org
           </p>
         </div>
 
@@ -2559,8 +2544,8 @@ python upload.py [TargetFolder]</pre>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 20px; padding: 20px; max-width:100%;" class="mobile-settings-block">
-          <h4 style="font-size: 14px; font-weight: 700;">Mobilgeräte Archive-Quellen</h4>
-          <p style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">Geben Sie Archive.org IDs durch Komma getrennt ein:</p>
+          <h4 style="font-size: 14px; font-weight: 700;">Archiv-Quellen</h4>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">Geben Sie Archive.org IDs mit DDF Folgen durch Komma getrennt ein um sie abzuspielen, falls FileDitch nicht funktioniert:</p>
           <input type="text" class="settings-input" id="mobArchiveId" value="${document.getElementById('archiveId').value}" style="margin-bottom:12px;">
           <button class="btn-action" onclick="syncAndReloadMobile()">Quellen neu laden</button>
         </div>
