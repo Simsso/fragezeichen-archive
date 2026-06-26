@@ -1,1 +1,2817 @@
-beta
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FragezeichenArchiv — ??? Hörspiel-Streaming</title>
+  <meta name="description" content="Streamen Sie alle Folgen der drei Fragezeichen. Unterstützt FileDitch und Archive.org für ein nahtloses, werbefreies Hörerlebnis.">
+  <meta name="theme-color" content="#050508">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #050508;
+      --bg-card: rgba(18, 18, 29, 0.4);
+      --bg-panel: rgba(12, 12, 18, 0.85);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.15);
+      --text: #ffffff;
+      --muted: #8a8996;
+      --primary: #00ff9d; /* Cyber Green */
+      --primary-glow: rgba(0, 255, 157, 0.25);
+      
+      /* Three Question Mark Colors */
+      --q-white: #ffffff;
+      --q-red: #ff2e54;
+      --q-blue: #00bfff;
+      --q-white-glow: rgba(255, 255, 255, 0.3);
+      --q-red-glow: rgba(255, 46, 84, 0.3);
+      --q-blue-glow: rgba(0, 191, 255, 0.3);
+      
+      --sidebar-width: 280px;
+      --player-height: 90px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    *::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(0, 191, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(255, 46, 84, 0.05) 0%, transparent 40%);
+    }
+
+    /* Layout Wrapper */
+    .app-layout {
+      display: flex;
+      flex: 1;
+      height: calc(100dvh - var(--player-height));
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border);
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    .brand-logo {
+      display: flex;
+      gap: 3px;
+      font-weight: 900;
+      font-size: 26px;
+      letter-spacing: -2px;
+    }
+    
+    .q-1 { color: var(--q-white); text-shadow: 0 0 10px var(--q-white-glow); }
+    .q-2 { color: var(--q-red); text-shadow: 0 0 10px var(--q-red-glow); }
+    .q-3 { color: var(--q-blue); text-shadow: 0 0 10px var(--q-blue-glow); }
+    
+    .brand-name {
+      font-weight: 800;
+      font-size: 19px;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #a2a2bd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 15px;
+      transition: var(--transition);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-link.active {
+      color: var(--primary);
+      background: rgba(0, 255, 157, 0.05);
+      border-color: rgba(0, 255, 157, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 255, 157, 0.03);
+    }
+
+    .nav-link svg {
+      transition: transform 0.2s;
+    }
+    .nav-link:hover svg {
+      transform: scale(1.05);
+    }
+
+    /* Sidebar Footer Settings Card */
+    .sidebar-settings {
+      margin-top: auto;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .settings-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+
+    .settings-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 8px;
+    }
+
+    .settings-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    .btn-action {
+      width: 100%;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px var(--primary-glow);
+      filter: brightness(1.05);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      position: relative;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .search-box {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      width: 18px;
+      height: 18px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 12px 16px 12px 46px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    /* Grid System */
+    .section-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .episodes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 24px;
+    }
+
+    .episode-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .episode-card:hover {
+      transform: translateY(-6px);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-hover);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
+
+    .cover-wrapper {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      background: #0c0c12;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    .cover-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .episode-card:hover .cover-image {
+      transform: scale(1.05);
+    }
+
+    /* Source & Favorite Badges */
+    .badge-container {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    .source-badge {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .source-badge.fileditch {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .source-badge.archive {
+      background: #252535;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .source-badge.none {
+      background: #14141c;
+      color: #555566;
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .fav-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      z-index: 2;
+      opacity: 0;
+    }
+
+    .episode-card:hover .fav-btn {
+      opacity: 1;
+    }
+
+    .fav-btn:hover {
+      transform: scale(1.1);
+      color: #fff;
+    }
+
+    .fav-btn.active {
+      opacity: 1;
+      color: var(--q-red);
+      background: rgba(255, 46, 84, 0.1);
+      border-color: rgba(255, 46, 84, 0.2);
+    }
+
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .episode-card:hover .play-overlay {
+      opacity: 1;
+    }
+
+    .play-circle {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: scale(0.8);
+      transition: var(--transition);
+      box-shadow: 0 6px 15px var(--primary-glow);
+    }
+
+    .episode-card:hover .play-circle {
+      transform: scale(1);
+    }
+
+    .card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 15px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Player Bar */
+    .player-bar {
+      height: var(--player-height);
+      background: var(--bg-panel);
+      backdrop-filter: blur(25px);
+      border-top: 1px solid var(--border);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      position: relative;
+    }
+
+    .player-left {
+      width: 30%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .player-cover {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      background: #000;
+      cursor: pointer;
+    }
+
+    .player-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .player-track-title {
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    
+    .player-track-title:hover {
+      text-decoration: underline;
+    }
+
+    .player-track-ep {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-center {
+      width: 40%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .ctrl-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .ctrl-btn:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .ctrl-btn.play-pause {
+      background: #fff;
+      color: #000;
+      width: 44px;
+      height: 44px;
+    }
+
+    .ctrl-btn.play-pause:hover {
+      background: var(--primary);
+      color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .progress-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: height 0.2s;
+    }
+
+    .progress-bar-wrap:hover {
+      height: 6px;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 10px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .player-right {
+      width: 30%;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .speed-selector {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .speed-selector:hover {
+      color: #fff;
+      border-color: var(--border-hover);
+    }
+
+    .timer-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .timer-btn:hover, .timer-btn.active {
+      color: var(--primary);
+    }
+
+    /* Modal Overlay Panels */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 3, 5, 0.9);
+      backdrop-filter: blur(25px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      padding: 24px;
+    }
+
+    .overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-box {
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      max-width: 850px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      transform: scale(0.95) translateY(20px);
+      transition: transform 0.35s cubic-bezier(0.25, 1, 0.25, 1);
+    }
+
+    .overlay.show .modal-box {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-hero {
+      position: relative;
+      background: linear-gradient(180deg, rgba(20, 20, 32, 0.8) 0%, #0d0d14 100%);
+      padding: 48px;
+      display: flex;
+      gap: 36px;
+      align-items: flex-end;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .modal-cover {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+    }
+
+    .modal-hero-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-ep-num {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .modal-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .modal-author {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .modal-content-body {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .desc-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-lbl {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .desc-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #d1d0db;
+    }
+
+    .track-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .track-item {
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.01);
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .track-item:hover {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .track-item.active {
+      background: rgba(0, 255, 157, 0.05);
+      border-color: rgba(0, 255, 157, 0.15);
+    }
+
+    .track-item-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .track-index {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      width: 24px;
+    }
+
+    .track-item.active .track-index, .track-item.active .track-title {
+      color: var(--primary);
+    }
+
+    .track-title {
+      font-size: 15px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-play-icon {
+      color: var(--muted);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .track-item:hover .track-play-icon {
+      color: #fff;
+    }
+
+    .track-item.active .track-play-icon {
+      color: var(--primary);
+    }
+
+    /* Cast / Sprecher List */
+    .cast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .cast-card {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cast-role {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .cast-actor {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Close Button */
+    .close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      transition: var(--transition);
+      z-index: 100;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.1);
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* Sleep Timer Popup Panel */
+    .sleep-popup {
+      position: absolute;
+      bottom: calc(var(--player-height) + 12px);
+      right: 40px;
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      width: 250px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sleep-popup.show {
+      display: flex;
+    }
+
+    .sleep-opt-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sleep-opt {
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .sleep-opt:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .sleep-opt.active {
+      background: rgba(0,255,157,0.1);
+      color: var(--primary);
+    }
+
+    .sleep-custom {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+
+    .sleep-input {
+      width: 70px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+    }
+
+    /* Loader */
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 100px 0;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255,255,255,0.05);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Buffering Overlay */
+    .buffering-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 3, 5, 0.85);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .buffering-overlay.show {
+      display: flex;
+    }
+
+    .buffering-title {
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      max-width: 320px;
+      line-height: 1.4;
+    }
+
+    .buffering-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile Bottom Navigation & Elements */
+    .mobile-nav-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      z-index: 900;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .mobile-nav-inner {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 100%;
+    }
+
+    .mobile-nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      flex: 1;
+    }
+
+    .mobile-nav-btn.active {
+      color: var(--primary);
+    }
+
+    /* Fullscreen Mobile Player Drawer */
+    .mobile-player-drawer {
+      position: fixed;
+      inset: 0;
+      background: #07070d;
+      z-index: 1500;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      padding: 32px 24px env(safe-area-inset-bottom);
+    }
+
+    .mobile-player-drawer.show {
+      transform: translateY(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .drawer-dismiss {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drawer-brand {
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .drawer-cover-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      margin-bottom: 30px;
+    }
+
+    .drawer-cover {
+      width: 80%;
+      max-width: 280px;
+      aspect-ratio: 1;
+      border-radius: 20px;
+      object-fit: cover;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    .drawer-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .drawer-title {
+      font-size: 22px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drawer-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drawer-controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    .drawer-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    .drawer-btn-play {
+      background: #fff;
+      color: #000;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(255,255,255,0.05);
+    }
+    
+    .drawer-btn-play:hover {
+      background: var(--primary);
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .drawer-secondary-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 800px) {
+      .sidebar {
+        display: none;
+      }
+      
+      .app-layout {
+        height: calc(100dvh - 140px); /* Account for player + bottom nav */
+      }
+      
+      .main-content {
+        padding: 24px 16px;
+        padding-bottom: 80px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .search-box {
+        max-width: 100%;
+      }
+
+      .episodes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .episode-card {
+        padding: 10px;
+      }
+
+      .card-title {
+        font-size: 13px;
+      }
+
+      .card-meta {
+        font-size: 10px;
+      }
+
+      .player-bar {
+        height: 80px;
+        padding: 0 16px;
+        bottom: 60px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .player-left {
+        width: 70%;
+      }
+
+      .player-center {
+        display: none;
+      }
+
+      .player-right {
+        width: 30%;
+      }
+      
+      .player-right .timer-btn, 
+      .player-right .speed-selector {
+        display: none;
+      }
+
+      .mobile-nav-bar {
+        display: block;
+      }
+
+      .modal-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 32px 16px;
+        gap: 20px;
+      }
+
+      .modal-cover {
+        width: 160px;
+        height: 160px;
+      }
+
+      .modal-content-body {
+        padding: 24px 16px;
+      }
+    }
+    
+    /* History List Styling */
+    .history-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 650px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .history-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 16px;
+      gap: 16px;
+      transition: var(--transition);
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    .history-item-row:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .history-item-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .history-item-cover {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .history-item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .history-item-title {
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .history-time {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .history-play-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      box-shadow: 0 4px 10px var(--primary-glow);
+    }
+
+    .history-item-row:hover .history-play-circle {
+      transform: scale(1.08);
+    }
+  </style>
+</head>
+<body>
+
+<div id="corsWarning" style="display: none; background: rgba(255, 46, 84, 0.1); border-bottom: 1px solid rgba(255, 46, 84, 0.2); color: #ff2e54; padding: 14px 24px; text-align: center; font-size: 14px; font-weight: 600; z-index: 9999; position: relative;">
+  ⚠️ <strong>CORS-Sicherheitswarnung</strong>: Sie haben das Archiv direkt als Datei (file://) geöffnet. Ihre hochgeladenen Folgen können vom Browser erst geladen werden, wenn Sie die Seite über einen lokalen Server ausführen (z.B. mit <code>python -m http.server 8000</code>).
+</div>
+
+<div class="app-layout">
+  <!-- SIDEBAR (PC Only) -->
+  <aside class="sidebar">
+    <a href="#" class="brand" onclick="navigate('all')">
+      <div class="brand-logo">
+        <span class="q-1">?</span><span class="q-2">?</span><span class="q-3">?</span>
+      </div>
+      <span class="brand-name">FragezeichenArchiv</span>
+    </a>
+    
+    <nav class="nav-list">
+      <div class="nav-link active" id="navLinkAll" onclick="navigate('all')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+        <span>Offizielle Folgen</span>
+      </div>
+      <div class="nav-link" id="navLinkSpecials" onclick="navigate('specials')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499c.196-.612 1.062-.612 1.258 0l2.062 6.444c.054.168.21.28.387.28h6.772c.642 0 .908.82.389 1.2l-5.48 3.98a.434.434 0 00-.14.43l2.062 6.443c.196.613-.505 1.122-1.026.744l-5.48-3.98a.434.434 0 00-.496 0l-5.48 3.98c-.521.378-1.222-.131-1.026-.744l2.062-6.443a.434.434 0 00-.14-.43L2.351 11.42c-.519-.38-.253-1.2.389-1.2h6.772c.177 0 .333-.112.387-.28l2.062-6.444z"/></svg>
+        <span>Specials</span>
+      </div>
+      <div class="nav-link" id="navLinkFavs" onclick="navigate('favs')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+        <span>Favoriten</span>
+      </div>
+      <div class="nav-link" id="navLinkHistory" onclick="navigate('history')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>Hörverlauf</span>
+      </div>
+      <div class="nav-link" id="navLinkSettings" onclick="navigate('settings')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.75 9.75h14.5M4.75 14.25h14.5M4.75 5.25h14.5M4.75 18.75h14.5"/></svg>
+        <span>Quellen & Infos</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-settings" id="sidebarArchiveSettings">
+      <h4 class="settings-title">Archiv Quellen</h4>
+      <input type="text" class="settings-input" id="archiveId" value="dreifragezeichen,dreifragezeichen-192" placeholder="Archive IDs">
+      <button class="btn-action" onclick="reloadArchives()">Aktualisieren</button>
+    </div>
+  </aside>
+
+  <!-- MAIN SCROLL CONTENT -->
+  <main class="main-content" id="mainScroll">
+    <!-- Search / Page Header -->
+    <div class="page-header">
+      <h2 class="section-title" id="pageTitle">Alle Folgen</h2>
+      <div class="search-box" id="searchContainer">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z"/></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="Titel, Nummer, Autor suchen..." oninput="filterGrid()">
+      </div>
+    </div>
+
+    <!-- Dynamic Section Content -->
+    <div id="dynamicContent">
+      <div class="loader-container" id="mainLoader">
+        <div class="spinner"></div>
+        <p>Lade Hörspiel-Archiv...</p>
+      </div>
+      <div class="episodes-grid" id="episodesGrid" style="display: none;"></div>
+      <div id="historyPanel" style="display: none;"></div>
+      <div id="settingsPanel" style="display: none;"></div>
+    </div>
+  </main>
+</div>
+
+<!-- PLAYER BAR (Bottom PC/Slim Mobile) -->
+<footer class="player-bar" id="playerBar">
+  <div class="player-left" onclick="handlePlayerLeftClick()">
+    <img src="https://placehold.co/128" alt="No Cover" class="player-cover" id="playerCover">
+    <div class="player-info">
+      <div class="player-track-title" id="playerTrackTitle">Nichts ausgewählt</div>
+      <div class="player-track-ep" id="playerTrackEpisode">Wähle eine Folge aus</div>
+    </div>
+  </div>
+
+  <div class="player-center">
+    <div class="player-controls">
+      <button class="ctrl-btn" onclick="skip(-15)" title="15s zurück">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+      </button>
+      <button class="ctrl-btn play-pause" onclick="togglePlay()" id="playPauseBtn">
+        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="ctrl-btn" onclick="skip(30)" title="30s vorwärts">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+      </button>
+    </div>
+    <div class="progress-container">
+      <span id="currTime">0:00</span>
+      <div class="progress-bar-wrap" id="progressBarWrap">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span id="totalTime">0:00</span>
+    </div>
+  </div>
+
+  <div class="player-right">
+    <div class="speed-selector" id="speedSelector" onclick="toggleSpeed()">1.0x</div>
+    <button class="timer-btn" id="timerBtn" onclick="toggleSleepPopup()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span id="timerLabel">Timer</span>
+    </button>
+    <button class="ctrl-btn" onclick="nextTrack(true)" title="Nächster Track">
+      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+    </button>
+  </div>
+</footer>
+
+<!-- MOBILE BOTTOM NAV BAR -->
+<div class="mobile-nav-bar">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" id="mobNavAll" onclick="navigateMobile('all', this)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+      <span>Offiziell</span>
+    </button>
+    <button class="mobile-nav-btn" id="mobNavSpecials" onclick="navigateMobile('specials', this)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499c.196-.612 1.062-.612 1.258 0l2.062 6.444c.054.168.21.28.387.28h6.772c.642 0 .908.82.389 1.2l-5.48 3.98a.434.434 0 00-.14.43l2.062 6.443c.196.613-.505 1.122-1.026.744l-5.48-3.98a.434.434 0 00-.496 0l-5.48 3.98c-.521.378-1.222-.131-1.026-.744l2.062-6.443a.434.434 0 00-.14-.43L2.351 11.42c-.519-.38-.253-1.2.389-1.2h6.772c.177 0 .333-.112.387-.28l2.062-6.444z"/></svg>
+      <span>Specials</span>
+    </button>
+    <button class="mobile-nav-btn" id="mobNavFavs" onclick="navigateMobile('favs', this)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+      <span>Favoriten</span>
+    </button>
+    <button class="mobile-nav-btn" id="mobNavHistory" onclick="navigateMobile('history', this)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Verlauf</span>
+    </button>
+    <button class="mobile-nav-btn" id="mobNavSettings" onclick="navigateMobile('settings', this)">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.75 9.75h14.5M4.75 14.25h14.5M4.75 5.25h14.5M4.75 18.75h14.5"/></svg>
+      <span>Infos</span>
+    </button>
+  </div>
+</div>
+
+<!-- FULLSCREEN MOBILE PLAYER DRAWER -->
+<div class="mobile-player-drawer" id="mobilePlayerDrawer">
+  <div class="drawer-header">
+    <button class="drawer-dismiss" onclick="closeMobilePlayer()">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+    </button>
+    <span class="drawer-brand">Jetzt läuft</span>
+    <button class="drawer-dismiss" onclick="openDetailViewFromDrawer()" title="Infos">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.854l-.041.02a.75.75 0 11-1.063-.854zm0 3l.041-.02a.75.75 0 111.063.854l-.041.02a.75.75 0 11-1.063-.854zM12 2.25V4.5m0 15v2.25m-9.75-9.75h2.25m15 0h2.25m-3.93-6.07l1.59 1.59m-12.72 12.72l1.59 1.59m0-15.91l-1.59 1.59m12.72 12.72l-1.59 1.59"/></svg>
+    </button>
+  </div>
+  
+  <div class="drawer-cover-wrap">
+    <img src="" alt="" class="drawer-cover" id="drawerCover">
+  </div>
+  
+  <div class="drawer-meta">
+    <h3 class="drawer-title" id="drawerTrackTitle">Nichts ausgewählt</h3>
+    <p class="drawer-subtitle" id="drawerTrackEpisode">Wähle eine Folge aus</p>
+  </div>
+  
+  <div class="drawer-controls-block">
+    <!-- Progress bar -->
+    <div class="progress-container">
+      <span id="d_currTime">0:00</span>
+      <div class="progress-bar-wrap" id="d_progressBarWrap">
+        <div class="progress-fill" id="d_progressFill"></div>
+      </div>
+      <span id="d_totalTime">0:00</span>
+    </div>
+    
+    <!-- Large controls -->
+    <div class="drawer-buttons">
+      <button class="ctrl-btn" onclick="skip(-15)">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+      </button>
+      <button class="drawer-btn-play" onclick="togglePlay()" id="d_playPauseBtn">
+        <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24" id="d_playIcon"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="ctrl-btn" onclick="skip(30)">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+      </button>
+    </div>
+
+    <!-- Secondary drawer row -->
+    <div class="drawer-secondary-buttons">
+      <div class="speed-selector" id="d_speedSelector" onclick="toggleSpeed()">1.0x</div>
+      <button class="timer-btn" id="d_timerBtn" onclick="toggleSleepPopup()">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="d_timerLabel">Timer</span>
+      </button>
+      <button class="ctrl-btn" onclick="nextTrack(true)">
+        <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SLEEP TIMER POPUP PANEL -->
+<div class="sleep-popup" id="sleepPopup">
+  <div class="settings-title">Sleep Timer</div>
+  <div class="sleep-opt-list">
+    <button class="sleep-opt" onclick="setSleepTimer(5)">5 Minuten</button>
+    <button class="sleep-opt" onclick="setSleepTimer(15)">15 Minuten</button>
+    <button class="sleep-opt" onclick="setSleepTimer(30)">30 Minuten</button>
+    <button class="sleep-opt" onclick="setSleepTimer(45)">45 Minuten</button>
+    <button class="sleep-opt" onclick="setSleepTimer(60)">60 Minuten</button>
+    <button class="sleep-opt" onclick="setSleepTimer(90)">90 Minuten</button>
+  </div>
+  <div class="sleep-custom">
+    <input type="number" class="sleep-input" id="sleepInputMin" placeholder="Min" min="1" max="480">
+    <button class="btn-action" style="padding: 8px;" onclick="setCustomSleepTimer()">Setzen</button>
+  </div>
+  <button class="sleep-opt" id="sleepOffOpt" style="color: var(--muted); text-align: center; margin-top: 6px; font-size: 13px;" onclick="setSleepTimer(0)">Timer ausschalten</button>
+</div>
+
+<!-- BUFFERING/PROXY LOADING OVERLAY -->
+<div class="buffering-overlay" id="bufferingOverlay">
+  <div class="spinner"></div>
+  <div class="buffering-title" id="bufferingTitle">Lade Folge...</div>
+  <div class="buffering-subtitle" id="bufferingSubtitle">Löse Stream-Link auf...</div>
+</div>
+
+<!-- MULTI-AUDIO ENGINES (GAPLESS PRELOAD) -->
+<audio id="audioA"></audio>
+<audio id="audioB"></audio>
+
+<!-- DYNAMIC OVERLAY MODAL -->
+<div class="overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <button class="close-btn" onclick="closeModal()">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+  </button>
+  <div class="modal-box" id="modalBox">
+    <!-- Content injected dynamically -->
+  </div>
+</div>
+
+<script>
+  let metaDB = {};
+  let dr3iDB = { serie: [] };
+  let specialsDB = { serie: [] };
+  let collections = [];
+  let fileditchDB = {};
+  
+  let favorites = JSON.parse(localStorage.getItem('???_favs') || '[]');
+  let progress = JSON.parse(localStorage.getItem('???_progress') || '{}');
+  let listeningHistory = JSON.parse(localStorage.getItem('???_history') || '[]');
+  
+  let currentCollectionIdx = -1;
+  let currentTrackIdx = 0;
+  let activePlayer = 'A';
+  let speed = 1;
+  let dragging = false;
+  let currentFilter = 'all';
+  let activeTab = 'all';
+
+  const playerA = document.getElementById('audioA');
+  const playerB = document.getElementById('audioB');
+
+  // Initialization
+  async function init() {
+    if (window.location.protocol === 'file:') {
+      const banner = document.getElementById('corsWarning');
+      if (banner) banner.style.display = 'block';
+    }
+
+    // 1. Fetch metadata.json from redretep's repository
+    try {
+      const res = await fetch('https://redretep.github.io/FragezeichenArchiv/metadata.json');
+      if (res.ok) metaDB = await res.json();
+    } catch (e) {
+      console.error("Failed to load metadata.json:", e);
+    }
+
+    // 1b. Fetch local specials and dr3i metadata
+    try {
+      const res = await fetch(`dr3imetadata.json?t=${Date.now()}`);
+      if (res.ok) dr3iDB = await res.json();
+    } catch (e) {
+      console.warn("Could not load dr3imetadata.json:", e);
+    }
+    try {
+      const res = await fetch(`specialsmetadata.json?t=${Date.now()}`);
+      if (res.ok) specialsDB = await res.json();
+    } catch (e) {
+      console.warn("Could not load specialsmetadata.json:", e);
+    }
+    
+    // 2. Fetch local fileditch_tracks.json
+    await loadFileditchDB();
+    
+    // 3. Load archives (either from FileDitch or Archive.org fallback)
+    await loadArchives();
+    
+    // 4. Setup player events & timeline
+    setupProgress();
+  }
+
+  async function loadFileditchDB() {
+    try {
+      const res = await fetch(`fileditch_tracks.json?t=${Date.now()}`);
+      if (res.ok) {
+        fileditchDB = await res.json();
+        console.log("Loaded local FileDitch database:", fileditchDB);
+      }
+    } catch (e) {
+      console.warn("No local fileditch_tracks.json file found, using Archive.org sources.");
+    }
+  }
+
+  function getNumber(str) {
+    const cleaned = str.replace(/(?:teil|track|cd|bonus|part|folge|nr|no)\.?\s*\d+/gi, '').trim();
+    const m = cleaned.match(/(?:\D|^)(\d{1,3})(?:\D|$)/);
+    return m ? parseInt(m[1]) : 999;
+  }
+
+  async function loadArchives() {
+    const loader = document.getElementById('mainLoader');
+    if (loader) loader.style.display = 'flex';
+    
+    const ids = document.getElementById('archiveId').value.split(',')
+      .map(s => s.trim())
+      .filter(s => s !== "");
+      
+    try {
+      const results = ids.length > 0 ? await Promise.all(ids.map(id => 
+        fetch(`https://archive.org/metadata/${id}`)
+          .then(r => r.ok ? r.json() : { files: [] })
+          .catch(() => ({ files: [] }))
+      )) : [];
+      
+      const archiveGroups = {};
+
+      // Parse archive.org metadata
+      results.forEach((data, index) => {
+        const id = ids[index];
+        if (!data.files) return;
+        const idNumMatch = id.match(/(\d{2,3})$/);
+        const forcedNum = idNumMatch ? parseInt(idNumMatch[1]) : null;
+
+        data.files.filter(f => f.name.toLowerCase().endsWith('.mp3')).forEach(f => {
+          const num = forcedNum || getNumber(f.name);
+          if (!archiveGroups[num]) {
+            archiveGroups[num] = {
+              id: id,
+              tracks: []
+            };
+          }
+          archiveGroups[num].tracks.push({
+            title: f.title || f.name.replace('.mp3',''),
+            url: `https://archive.org/download/${id}/${f.name}`,
+            name: f.name
+          });
+        });
+      });
+      
+      const groups = {};
+
+      // 1. Populate from metaDB.serie
+      if (metaDB.serie) {
+        metaDB.serie.forEach(meta => {
+          const num = meta.nummer;
+          const key = `M_${num}`;
+          const epNumStr = String(num);
+
+          let tracks = [];
+          let source = 'none';
+
+          // Check if we have local FileDitch tracks uploaded
+          if (fileditchDB[epNumStr] && fileditchDB[epNumStr].length > 0) {
+            const fdTracks = fileditchDB[epNumStr];
+            source = 'fileditch';
+            tracks = fdTracks.map((t, idx) => {
+              let title = t.filename.replace(/\.(mp3|flac|m4a)$/i, '').replace(/_/g, ' ');
+              return {
+                title: title,
+                url: t.url,
+                name: t.filename,
+                source: 'fileditch'
+              };
+            });
+          } 
+          // Check if we have Archive.org tracks
+          else if (archiveGroups[num]) {
+            const arc = archiveGroups[num];
+            source = 'archive';
+            tracks = arc.tracks.map(t => ({
+              title: t.title,
+              url: t.url,
+              name: t.name,
+              source: 'archive'
+            }));
+          }
+          // No tracks uploaded
+          else {
+            source = 'none';
+            const metaTracks = meta.medien?.[0]?.tracks || meta.kapitel || [];
+            tracks = metaTracks.map((t, idx) => ({
+              title: t.titel || `Teil ${idx + 1}`,
+              url: '',
+              name: `track_${idx + 1}`,
+              source: 'none'
+            }));
+          }
+
+          groups[key] = {
+            id: key,
+            num: num,
+            meta: meta,
+            title: `${num}. ${meta.titel}`,
+            author: meta.autor || "Drei Fragezeichen",
+            cover: meta.links?.cover || "https://placehold.co/300",
+            tracks: tracks,
+            source: source,
+            category: 'official'
+          };
+        });
+      }
+      
+      // 2. Add FileDitch uploads not found in metadata
+      Object.keys(fileditchDB).forEach(numStr => {
+        const num = parseInt(numStr);
+        // Only map if it's purely numeric (official)
+        if (isNaN(num)) return;
+        const key = `M_${num}`;
+        if (!groups[key]) {
+          const fdTracks = fileditchDB[numStr];
+          const tracks = fdTracks.map(t => ({
+            title: t.filename.replace(/\.(mp3|flac|m4a)$/i, '').replace(/_/g, ' '),
+            url: t.url,
+            name: t.filename,
+            source: 'fileditch'
+          }));
+          groups[key] = {
+            id: key,
+            num: num,
+            meta: null,
+            title: `Folge ${num}`,
+            author: "Drei Fragezeichen",
+            cover: "https://placehold.co/300",
+            tracks: tracks,
+            source: 'fileditch',
+            category: 'official'
+          };
+        }
+      });
+
+      // 3. Add Archive.org items not found in metadata
+      Object.keys(archiveGroups).forEach(numStr => {
+        const num = parseInt(numStr);
+        const key = `M_${num}`;
+        if (!groups[key]) {
+          const arc = archiveGroups[numStr];
+          groups[key] = {
+            id: key,
+            num: num,
+            meta: null,
+            title: `Folge ${num}`,
+            author: "Drei Fragezeichen",
+            cover: `https://archive.org/services/img/${arc.id}`,
+            tracks: arc.tracks.map(t => ({
+              title: t.title,
+              url: t.url,
+              name: t.name,
+              source: 'archive'
+            })),
+            source: 'archive',
+            category: 'official'
+          };
+        }
+      });
+
+      // 4. Populate from dr3iDB.serie (Die dr3i)
+      if (dr3iDB.serie) {
+        dr3iDB.serie.forEach(meta => {
+          const key = meta.id;
+          let tracks = [];
+          let source = 'none';
+
+          if (fileditchDB[key] && fileditchDB[key].length > 0) {
+            const fdTracks = fileditchDB[key];
+            source = 'fileditch';
+            tracks = meta.tracks.map(t => {
+              const match = fdTracks.find(fd => fd.filename === t.filename);
+              return {
+                title: t.title,
+                url: match ? match.url : '',
+                name: t.filename,
+                source: match ? 'fileditch' : 'none'
+              };
+            });
+          } else {
+            tracks = meta.tracks.map(t => ({
+              title: t.title,
+              url: '',
+              name: t.filename,
+              source: 'none'
+            }));
+          }
+
+          groups[key] = {
+            id: key,
+            num: meta.nummer,
+            meta: meta,
+            title: meta.titel,
+            author: meta.autor || "DiE DR3i",
+            cover: meta.links?.cover || "https://placehold.co/300",
+            tracks: tracks,
+            source: source,
+            category: 'special'
+          };
+        });
+      }
+
+      // 5. Populate from specialsDB.serie (Sonderfolgen)
+      if (specialsDB.serie) {
+        specialsDB.serie.forEach(meta => {
+          const key = meta.id;
+          let tracks = [];
+          let source = 'none';
+
+          if (fileditchDB[key] && fileditchDB[key].length > 0) {
+            const fdTracks = fileditchDB[key];
+            source = 'fileditch';
+            tracks = meta.tracks.map(t => {
+              const match = fdTracks.find(fd => fd.filename === t.filename);
+              return {
+                title: t.title,
+                url: match ? match.url : '',
+                name: t.filename,
+                source: match ? 'fileditch' : 'none'
+              };
+            });
+          } else {
+            tracks = meta.tracks.map(t => ({
+              title: t.title,
+              url: '',
+              name: t.filename,
+              source: 'none'
+            }));
+          }
+
+          groups[key] = {
+            id: key,
+            num: meta.nummer + 500, // Offset by 500 to sort specials after Die dr3i
+            meta: meta,
+            title: meta.titel,
+            author: meta.autor || "Die drei ???",
+            cover: meta.links?.cover || "https://placehold.co/300",
+            tracks: tracks,
+            source: source,
+            category: 'special'
+          };
+        });
+      }
+
+      // Sort collections and their tracks naturally
+      collections = Object.values(groups).sort((a,b) => a.num - b.num);
+      collections.forEach(c => {
+        c.tracks.sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true}));
+      });
+      
+      if (loader) loader.style.display = 'none';
+      navigate(activeTab);
+    } catch(e) {
+      console.error("Error loading archives:", e);
+      if (loader) loader.style.display = 'none';
+    }
+  }
+
+  async function reloadArchives() {
+    document.getElementById('episodesGrid').style.display = 'none';
+    await loadArchives();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('episodesGrid');
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    
+    let items = collections;
+    if (currentFilter === 'favs') {
+      items = collections.filter(c => favorites.includes(c.id));
+    } else if (currentFilter === 'specials') {
+      items = collections.filter(c => c.category === 'special');
+    } else {
+      items = collections.filter(c => c.category === 'official');
+    }
+    
+    if (q) {
+      items = items.filter(c => 
+        c.title.toLowerCase().includes(q) || 
+        String(c.num).includes(q) ||
+        c.author.toLowerCase().includes(q)
+      );
+    }
+
+    if (items.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 0; color: var(--muted); font-size: 15px;">Keine Folgen gefunden.</div>`;
+      return;
+    }
+
+    grid.innerHTML = items.map((c) => {
+      const globalIdx = collections.indexOf(c);
+      const isFav = favorites.includes(c.id);
+      
+      let badgeClass = 'none';
+      let badgeText = 'Ausstehend';
+      if (c.source === 'fileditch') {
+        badgeClass = 'fileditch';
+        badgeText = 'FileDitch (HD)';
+      } else if (c.source === 'archive') {
+        badgeClass = 'archive';
+        badgeText = 'Archive.org';
+      }
+
+      return `
+        <div class="episode-card" onclick="handleCardClick(${globalIdx})">
+          <div class="badge-container">
+            <span class="source-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav('${c.id}')">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </button>
+          <div class="cover-wrapper">
+            <img src="${c.cover}" class="cover-image" loading="lazy" alt="${c.title}">
+            <div class="play-overlay">
+              <div class="play-circle">
+                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="card-info">
+            <div class="card-title" title="${c.title}">${c.title}</div>
+            <div class="card-meta">
+              <span>${c.tracks.length} ${c.tracks.length === 1 ? 'Track' : 'Tracks'}</span>
+              <span style="font-weight: 700;">${c.category === 'special' ? (c.id.startsWith('D_') ? `D3 #${c.num}` : 'Special') : `#${c.num}`}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function handleCardClick(ci) {
+    const c = collections[ci];
+    if (c.tracks.length > 1) {
+      openTrackView(ci);
+    } else {
+      playTrack(ci, 0);
+    }
+  }
+
+  // Display Tracks Listing inside modal
+  function openTrackView(ci) {
+    const c = collections[ci];
+    const box = document.getElementById('modalBox');
+    
+    const epLabel = c.category === 'special' ? (c.id.startsWith('D_') ? `Die DR3i - Folge ${c.num}` : 'Sonderfolge') : `Folge ${c.num}`;
+    box.innerHTML = `
+      <div class="modal-hero">
+        <img src="${c.cover}" class="modal-cover" alt="${c.title}">
+        <div class="modal-hero-details">
+          <span class="modal-ep-num">${epLabel}</span>
+          <h2 class="modal-title">${c.title}</h2>
+          <p class="modal-author">${c.author}</p>
+        </div>
+      </div>
+      <div class="modal-content-body">
+        <div class="desc-section">
+          <span class="section-lbl">Tracks</span>
+          <div class="track-list">
+            ${c.tracks.map((t, i) => {
+              const isActive = currentCollectionIdx === ci && currentTrackIdx === i;
+              const sourceBadge = t.source === 'fileditch' ? `<span class="source-badge fileditch" style="margin-left:8px; font-size:8px;">HD</span>` : '';
+              return `
+                <div class="track-item ${isActive ? 'active' : ''}" onclick="playTrack(${ci}, ${i}, 0.1); closeModal()">
+                  <div class="track-item-left">
+                    <span class="track-index">${i+1}</span>
+                    <span class="track-title">${t.title} ${sourceBadge}</span>
+                  </div>
+                  <svg class="track-play-icon" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    showOverlay();
+  }
+
+  // Display Sprecher / Details Modal
+  function openDetailView() {
+    if (currentCollectionIdx === -1) return;
+    const c = collections[currentCollectionIdx];
+    const m = c.meta;
+    const box = document.getElementById('modalBox');
+
+    let rolesHtml = '';
+    if (m?.sprechrollen) {
+      rolesHtml = `
+        <div class="desc-section">
+          <span class="section-lbl">Sprecherrollen</span>
+          <div class="cast-grid">
+            ${m.sprechrollen.map(r => `
+              <div class="cast-card">
+                <span class="cast-role">${r.rolle}</span>
+                <span class="cast-actor">${r.sprecher}${r.pseudonym ? ` (${r.pseudonym})` : ''}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    const epLabel = c.category === 'special' ? (c.id.startsWith('D_') ? `Die DR3i - Folge ${c.num}` : 'Sonderfolge') : `Folge ${c.num}`;
+    box.innerHTML = `
+      <div class="modal-hero">
+        <img src="${c.cover}" class="modal-cover" alt="${c.title}">
+        <div class="modal-hero-details">
+          <span class="modal-ep-num">${epLabel}</span>
+          <h2 class="modal-title">${c.title}</h2>
+          <p class="modal-author">${c.author}</p>
+          ${m?.veröffentlichungsdatum ? `<p style="color: var(--muted); font-size: 13px; margin-top: 6px;">Erschienen am: ${new Date(m.veröffentlichungsdatum).toLocaleDateString('de-DE')}</p>` : ''}
+        </div>
+      </div>
+      <div class="modal-content-body">
+        <div class="desc-section">
+          <span class="section-lbl">Beschreibung</span>
+          <p class="desc-text">${m?.gesamtbeschreibung || m?.beschreibung || 'Keine Beschreibung verfügbar.'}</p>
+        </div>
+        
+        <div class="desc-section">
+          <span class="section-lbl">Inhalt / Tracks</span>
+          <div class="track-list">
+            ${c.tracks.map((t, i) => `
+              <div class="track-item ${currentTrackIdx === i ? 'active' : ''}" onclick="playTrack(${currentCollectionIdx}, ${i}, 0.1); closeModal()">
+                <div class="track-item-left">
+                  <span class="track-index">${i+1}</span>
+                  <span class="track-title">${t.title}</span>
+                </div>
+                <svg class="track-play-icon" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        ${rolesHtml}
+      </div>
+    `;
+
+    showOverlay();
+  }
+
+  function openDetailViewFromDrawer() {
+    closeMobilePlayer();
+    openDetailView();
+  }
+
+  function showOverlay() {
+    const ov = document.getElementById('modalOverlay');
+    ov.style.display = 'flex';
+    setTimeout(() => ov.classList.add('show'), 10);
+  }
+
+  function closeModal() {
+    const ov = document.getElementById('modalOverlay');
+    ov.classList.remove('show');
+    setTimeout(() => ov.style.display = 'none', 300);
+  }
+
+  // FileDitch Proxy Stream Resolver
+  async function resolveFileditchURL(url) {
+    if (!url.includes('fileditchfiles.me') && !url.includes('fileditch')) {
+      return url;
+    }
+    
+    // Resolve relative or raw path syntax if needed
+    let resolvedUrl = url;
+    const proxyUrl = `https://api.pidi.workers.dev/?url=${encodeURIComponent(resolvedUrl)}`;
+    
+    const response = await fetch(proxyUrl);
+    if (!response.ok) {
+      throw new Error(`Fileditch proxy returned status: ${response.status}`);
+    }
+
+    const htmlText = await response.text();
+    
+    // Extract direct media stream link
+    const urlRegex = /(https:\/\/[^"\s>]+[\?&]md5=[^"\s>]+)/;
+    const match = htmlText.match(urlRegex);
+
+    if (match && match[1]) {
+      let streamUrl = decodeHtmlEntities(match[1]);
+      streamUrl = streamUrl.replace(/['"]+$/, '');
+      return streamUrl;
+    } else {
+      throw new Error("Direct streaming URL not found inside Fileditch download page.");
+    }
+  }
+
+  function decodeHtmlEntities(text) {
+    const textArea = document.createElement('textarea');
+    textArea.innerHTML = text;
+    return textArea.value;
+  }
+
+  // Get stream URL dynamically
+  async function getPlayableTrackURL(track) {
+    if (track.source === 'fileditch' || track.url.includes('fileditchfiles.me')) {
+      return await resolveFileditchURL(track.url);
+    }
+    return track.url;
+  }
+
+  // Audio Playback
+  async function playTrack(ci, ti, seekTo = 0) {
+    currentCollectionIdx = ci;
+    currentTrackIdx = ti;
+    const c = collections[ci];
+    const track = c.tracks[ti];
+    
+    if (track.source === 'none' || !track.url) {
+      alert("Diese Folge ist noch nicht hochgeladen. Bitte nutze den Uploader, um sie auf FileDitch bereitzustellen.");
+      return;
+    }
+    
+    const player = activePlayer === 'A' ? playerA : playerB;
+
+    showBuffering(track.title, track.source === 'fileditch' ? 'Lade HD-Quelle (FileDitch)...' : 'Lade Quelle (Archive.org)...');
+
+    try {
+      const playableUrl = await getPlayableTrackURL(track);
+      
+      player.src = playableUrl;
+      player.playbackRate = speed;
+
+      const onReady = () => {
+        player.currentTime = seekTo || (ti === 0 ? (progress[c.id] || 0) : 0);
+        player.play().catch(() => {});
+        hideBuffering();
+        player.removeEventListener('canplay', onReady);
+        player.removeEventListener('error', onError);
+      };
+      
+      const onError = (e) => {
+        console.error("Audio engine error:", e);
+        hideBuffering();
+        player.removeEventListener('canplay', onReady);
+        player.removeEventListener('error', onError);
+        alert(`Fehler beim Streamen des Tracks. Quelle: ${track.source}.`);
+      };
+
+      player.addEventListener('canplay', onReady);
+      player.addEventListener('error', onError);
+      
+      updateUI();
+      preloadNext();
+      addToHistory(ci, ti);
+    } catch (e) {
+      console.error("Failed resolving stream source:", e);
+      hideBuffering();
+      alert(`Verbindungsfehler zur Streaming-Quelle: ${e.message}`);
+    }
+  }
+
+  function showBuffering(title, subtitle = 'Löse Stream-Link auf...') {
+    document.getElementById('bufferingTitle').textContent = title || '';
+    document.getElementById('bufferingSubtitle').textContent = subtitle;
+    document.getElementById('bufferingOverlay').classList.add('show');
+  }
+
+  function hideBuffering() {
+    document.getElementById('bufferingOverlay').classList.remove('show');
+  }
+
+  async function preloadNext() {
+    const c = collections[currentCollectionIdx];
+    if (currentTrackIdx < c.tracks.length - 1) {
+      const nextTrackObj = c.tracks[currentTrackIdx + 1];
+      const nextPlayer = activePlayer === 'A' ? playerB : playerA;
+      
+      try {
+        const preResolvedUrl = await getPlayableTrackURL(nextTrackObj);
+        nextPlayer.src = preResolvedUrl;
+        nextPlayer.load();
+      } catch (e) {
+        console.warn("Background preload failed:", e);
+      }
+    }
+  }
+
+  function nextTrack(manual = false) {
+    if (currentCollectionIdx === -1) return;
+    const c = collections[currentCollectionIdx];
+    if (currentTrackIdx < c.tracks.length - 1) {
+      activePlayer = activePlayer === 'A' ? 'B' : 'A';
+      const player = activePlayer === 'A' ? playerA : playerB;
+      const other = activePlayer === 'A' ? playerB : playerA;
+      
+      other.pause();
+      currentTrackIdx++;
+      player.play().catch(() => {});
+      updateUI();
+      preloadNext();
+    } else if (manual && currentCollectionIdx < collections.length - 1) {
+      playTrack(currentCollectionIdx + 1, 0);
+    }
+  }
+
+  function updateUI() {
+    const c = collections[currentCollectionIdx];
+    const t = c.tracks[currentTrackIdx];
+    
+    // Player bar updates
+    document.getElementById('playerTrackTitle').textContent = t.title;
+    document.getElementById('playerTrackEpisode').textContent = c.title;
+    document.getElementById('playerCover').src = c.cover;
+    
+    // Drawer updates
+    document.getElementById('drawerTrackTitle').textContent = t.title;
+    document.getElementById('drawerTrackEpisode').textContent = c.title;
+    document.getElementById('drawerCover').src = c.cover;
+
+    // Toggle icons
+    const playSVGHtml = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    document.getElementById('playIcon').innerHTML = playSVGHtml;
+    document.getElementById('d_playIcon').innerHTML = playSVGHtml;
+    
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: t.title,
+        artist: c.author,
+        album: c.title,
+        artwork: [{ src: c.cover, sizes: '512x512', type: 'image/png' }]
+      });
+    }
+  }
+
+  function togglePlay() {
+    const p = activePlayer === 'A' ? playerA : playerB;
+    const playIcon = document.getElementById('playIcon');
+    const d_playIcon = document.getElementById('d_playIcon');
+    
+    if (p.paused) {
+      p.play().catch(() => {});
+      const pauseSVGHtml = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      playIcon.innerHTML = pauseSVGHtml;
+      d_playIcon.innerHTML = pauseSVGHtml;
+    } else {
+      p.pause();
+      const playSVGHtml = '<path d="M8 5v14l11-7z"/>';
+      playIcon.innerHTML = playSVGHtml;
+      d_playIcon.innerHTML = playSVGHtml;
+    }
+  }
+
+  function skip(s) {
+    const p = activePlayer === 'A' ? playerA : playerB;
+    p.currentTime += s;
+  }
+
+  function setupProgress() {
+    const update = () => {
+      const p = activePlayer === 'A' ? playerA : playerB;
+      if (!dragging && p.duration) {
+        const perc = (p.currentTime / p.duration) * 100;
+        
+        // Update bar progress fills
+        document.getElementById('progressFill').style.width = perc + '%';
+        document.getElementById('d_progressFill').style.width = perc + '%';
+        
+        // Update timestamps
+        const currFormatted = fmt(p.currentTime);
+        const totalFormatted = fmt(p.duration);
+        
+        document.getElementById('currTime').textContent = currFormatted;
+        document.getElementById('totalTime').textContent = totalFormatted;
+        
+        document.getElementById('d_currTime').textContent = currFormatted;
+        document.getElementById('d_totalTime').textContent = totalFormatted;
+        
+        if (currentCollectionIdx !== -1) {
+          progress[collections[currentCollectionIdx].id] = p.currentTime;
+          localStorage.setItem('???_progress', JSON.stringify(progress));
+        }
+        
+        // Natural end of track -> auto play next
+        if (p.duration - p.currentTime < 0.8 && !p.paused) {
+          nextTrack();
+        }
+      }
+    };
+    
+    playerA.ontimeupdate = update;
+    playerB.ontimeupdate = update;
+
+    // Timeline Drag / Tap
+    const configureSeek = (barId) => {
+      const pb = document.getElementById(barId);
+      const seekFunc = (e) => {
+        const rect = pb.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+        const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        const p = activePlayer === 'A' ? playerA : playerB;
+        if (p.duration) p.currentTime = pos * p.duration;
+      };
+      
+      pb.onmousedown = (e) => { dragging = true; seekFunc(e); };
+      window.addEventListener('mousemove', (e) => { if (dragging) seekFunc(e); });
+      window.addEventListener('mouseup', () => { dragging = false; });
+      
+      // Touch support
+      pb.ontouchstart = (e) => { dragging = true; seekFunc(e); };
+      window.addEventListener('touchmove', (e) => { if (dragging) seekFunc(e); });
+      window.addEventListener('touchend', () => { dragging = false; });
+    };
+
+    configureSeek('progressBarWrap');
+    configureSeek('d_progressBarWrap');
+  }
+
+  function fmt(s) {
+    if (isNaN(s)) return "0:00";
+    const m = Math.floor(s/60);
+    const sc = Math.floor(s%60);
+    return `${m}:${sc.toString().padStart(2,'0')}`;
+  }
+
+  function toggleSpeed() {
+    speed = speed >= 2 ? 0.75 : (speed === 0.75 ? 1 : speed + 0.25);
+    playerA.playbackRate = speed;
+    playerB.playbackRate = speed;
+    
+    const label = speed + 'x';
+    document.getElementById('speedSelector').textContent = label;
+    document.getElementById('d_speedSelector').textContent = label;
+  }
+
+  function toggleFav(id) {
+    if (favorites.includes(id)) {
+      favorites = favorites.filter(f => f !== id);
+    } else {
+      favorites.push(id);
+    }
+    localStorage.setItem('???_favs', JSON.stringify(favorites));
+    renderGrid();
+  }
+
+  // Navigation Panel SPA Routing
+  function navigate(tab) {
+    activeTab = tab;
+    // Reset active link styling
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+
+    const searchContainer = document.getElementById('searchContainer');
+    const episodesGrid = document.getElementById('episodesGrid');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const historyPanel = document.getElementById('historyPanel');
+    const mainLoader = document.getElementById('mainLoader');
+
+    // Hide all content areas first
+    if (episodesGrid) episodesGrid.style.display = 'none';
+    if (settingsPanel) settingsPanel.style.display = 'none';
+    if (historyPanel) historyPanel.style.display = 'none';
+    if (mainLoader) mainLoader.style.display = 'none';
+
+    // Sidebar navigation highlight sync
+    if (tab === 'all') {
+      const activeLink = document.getElementById('navLinkAll');
+      const activeMob = document.getElementById('mobNavAll');
+      if (activeLink) activeLink.classList.add('active');
+      if (activeMob) activeMob.classList.add('active');
+      document.getElementById('pageTitle').textContent = 'Offizielle Folgen';
+      if (searchContainer) searchContainer.style.display = 'block';
+      
+      if (episodesGrid) episodesGrid.style.display = 'grid';
+      currentFilter = 'all';
+      renderGrid();
+    } 
+    else if (tab === 'specials') {
+      const activeLink = document.getElementById('navLinkSpecials');
+      const activeMob = document.getElementById('mobNavSpecials');
+      if (activeLink) activeLink.classList.add('active');
+      if (activeMob) activeMob.classList.add('active');
+      document.getElementById('pageTitle').textContent = 'Sonderfolgen & Specials';
+      if (searchContainer) searchContainer.style.display = 'block';
+      
+      if (episodesGrid) episodesGrid.style.display = 'grid';
+      currentFilter = 'specials';
+      renderGrid();
+    }    else if (tab === 'favs') {
+      const activeLink = document.getElementById('navLinkFavs');
+      const activeMob = document.getElementById('mobNavFavs');
+      if (activeLink) activeLink.classList.add('active');
+      if (activeMob) activeMob.classList.add('active');
+      document.getElementById('pageTitle').textContent = 'Favoriten';
+      if (searchContainer) searchContainer.style.display = 'block';
+      
+      if (episodesGrid) episodesGrid.style.display = 'grid';
+      currentFilter = 'favs';
+      renderGrid();
+    }
+    else if (tab === 'history') {
+      const activeLink = document.getElementById('navLinkHistory');
+      const activeMob = document.getElementById('mobNavHistory');
+      if (activeLink) activeLink.classList.add('active');
+      if (activeMob) activeMob.classList.add('active');
+      document.getElementById('pageTitle').textContent = 'Hörverlauf';
+      if (searchContainer) searchContainer.style.display = 'none';
+      
+      if (historyPanel) {
+        historyPanel.style.display = 'block';
+        renderHistoryPage();
+      }
+    }
+    else if (tab === 'settings') {
+      const activeLink = document.getElementById('navLinkSettings');
+      const activeMob = document.getElementById('mobNavSettings');
+      if (activeLink) activeLink.classList.add('active');
+      if (activeMob) activeMob.classList.add('active');
+      document.getElementById('pageTitle').textContent = 'Quellen & Info';
+      if (searchContainer) searchContainer.style.display = 'none';
+      
+      if (settingsPanel) {
+        settingsPanel.style.display = 'block';
+        settingsPanel.innerHTML = renderSettingsPage();
+      }
+    }
+  }
+
+  function navigateMobile(tab, el) {
+    navigate(tab);
+  }
+
+  function renderSettingsPage() {
+    // Count local FileDitch uploads
+    let localCount = 0;
+    collections.forEach(c => {
+      if (c.tracks.some(t => t.source === 'fileditch')) {
+        localCount++;
+      }
+    });
+    
+    const percent = collections.length > 0 ? Math.round((localCount / collections.length) * 100) : 0;
+
+    return `
+      <div style="max-width: 650px; display: flex; flex-direction: column; gap: 30px; animation: fadeIn 0.3s ease;">
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+          <h3 style="font-size: 18px; font-weight: 700;">HD-Medienbibliothek Status</h3>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 14px;">
+            <span style="color: var(--muted);">FileDitch HD-Folgen:</span>
+            <span style="font-weight: 700; color: var(--primary);">${localCount} / ${collections.length} (${percent}%)</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow:hidden;">
+            <div style="width: ${percent}%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary-glow); border-radius:10px;"></div>
+          </div>
+          <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-top: 4px;">
+            Das Archiv streamt standardmäßig von archive.org. Sobald Sie Folgen über das Uploader-Skript hochgeladen haben, streamt die App in brillanter HD-Qualität von FileDitch.
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+          <h3 style="font-size: 18px; font-weight: 700;">Hörspiele hochladen</h3>
+          <p style="font-size: 14px; line-height: 1.5; color: #d1d0db;">
+            Um eigene Folgen in FileDitch einzupflegen, führen Sie das mitgelieferte Uploader-Skript aus:
+          </p>
+          <pre style="background: #000; border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--primary); overflow-x: auto; line-height: 1.5;">
+Double-click: upload.bat
+
+# Oder über PowerShell/Terminal:
+python upload.py [TargetFolder]</pre>
+          <p style="font-size: 13px; color: var(--muted); line-height: 1.5;">
+            Das Skript durchsucht Ihr Musik-Verzeichnis nach DDF-Ordnern (z.B. <code style="font-family:'JetBrains Mono'; color:#fff;">Die drei ??? - 001 - ...</code>), lädt diese hoch und generiert die Steuerdatei <code style="font-family:'JetBrains Mono'; color:#fff;">fileditch_tracks.json</code>.
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+          <h3 style="font-size: 18px; font-weight: 700; color: #fff;">Danksagungen & Credits</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+              <span style="color: var(--muted);">Programmierung:</span>
+              <span style="font-weight: 600;"><a href="https://github.com/redretep" target="_blank" style="color: var(--primary); text-decoration: none;">redretep</a></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+              <span style="color: var(--muted);">HD-Audio:</span>
+              <span style="font-weight: 600; color: #fff;">swiggis</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+              <span style="color: var(--muted);">Archive.org Audio:</span>
+              <span style="font-weight: 600; color: #fff;">redretep</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+              <span style="color: var(--muted);">Specials (Die dr3i & mehr):</span>
+              <span style="font-weight: 600; color: #fff;">swiggis</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+              <span style="color: var(--muted);">Metadaten:</span>
+              <span style="font-weight: 600;"><a href="https://dreimetadaten.de" target="_blank" style="color: var(--primary); text-decoration: none;">dreimetadaten.de</a></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 20px; padding: 20px; max-width:100%;" class="mobile-settings-block">
+          <h4 style="font-size: 14px; font-weight: 700;">Mobilgeräte Archive-Quellen</h4>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">Geben Sie Archive.org IDs durch Komma getrennt ein:</p>
+          <input type="text" class="settings-input" id="mobArchiveId" value="${document.getElementById('archiveId').value}" style="margin-bottom:12px;">
+          <button class="btn-action" onclick="syncAndReloadMobile()">Quellen neu laden</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function syncAndReloadMobile() {
+    const val = document.getElementById('mobArchiveId').value;
+    document.getElementById('archiveId').value = val;
+    reloadArchives();
+    navigate('all');
+  }
+
+  function filterGrid() {
+    renderGrid();
+  }
+
+  // Fullscreen Mobile Player Drawer logic
+  function openMobilePlayer() {
+    if (currentCollectionIdx === -1) return;
+    document.getElementById('mobilePlayerDrawer').classList.add('show');
+  }
+
+  function closeMobilePlayer() {
+    document.getElementById('mobilePlayerDrawer').classList.remove('show');
+  }
+
+  function handlePlayerLeftClick() {
+    if (window.innerWidth <= 800) {
+      openMobilePlayer();
+    } else {
+      openDetailView();
+    }
+  }
+
+  // Sleep Timer logic
+  let sleepTimerEnd = null;
+  let sleepTimerInterval = null;
+  let sleepPopupOpen = false;
+
+  function toggleSleepPopup() {
+    sleepPopupOpen = !sleepPopupOpen;
+    document.getElementById('sleepPopup').classList.toggle('show', sleepPopupOpen);
+  }
+
+  // Close timer popup on outside click
+  document.addEventListener('click', function(e) {
+    if (sleepPopupOpen && !e.target.closest('#sleepPopup') && !e.target.closest('#timerBtn') && !e.target.closest('#d_timerBtn')) {
+      sleepPopupOpen = false;
+      document.getElementById('sleepPopup').classList.remove('show');
+    }
+  });
+
+  function setCustomSleepTimer() {
+    const val = parseInt(document.getElementById('sleepInputMin').value);
+    if (!val || val < 1) return;
+    document.getElementById('sleepInputMin').value = '';
+    document.querySelectorAll('.sleep-opt').forEach(b => b.classList.remove('active'));
+    setSleepTimerMinutes(val);
+  }
+
+  function setSleepTimer(minutes) {
+    document.querySelectorAll('.sleep-opt').forEach(b => b.classList.remove('active'));
+    if (event && event.currentTarget) {
+      event.currentTarget.classList.add('active');
+    }
+    
+    if (minutes === 0) {
+      clearInterval(sleepTimerInterval);
+      sleepTimerEnd = null;
+      document.getElementById('timerBtn').classList.remove('active');
+      document.getElementById('d_timerBtn').classList.remove('active');
+      document.getElementById('timerLabel').textContent = 'Timer';
+      document.getElementById('d_timerLabel').textContent = 'Timer';
+      sleepPopupOpen = false;
+      document.getElementById('sleepPopup').classList.remove('show');
+      return;
+    }
+    setSleepTimerMinutes(minutes);
+  }
+
+  function setSleepTimerMinutes(minutes) {
+    clearInterval(sleepTimerInterval);
+    sleepTimerEnd = Date.now() + minutes * 60 * 1000;
+    
+    document.getElementById('timerBtn').classList.add('active');
+    document.getElementById('d_timerBtn').classList.add('active');
+
+    function tick() {
+      const remaining = sleepTimerEnd - Date.now();
+      if (remaining <= 0) {
+        clearInterval(sleepTimerInterval);
+        const p = activePlayer === 'A' ? playerA : playerB;
+        p.pause();
+        
+        const playSVGHtml = '<path d="M8 5v14l11-7z"/>';
+        document.getElementById('playIcon').innerHTML = playSVGHtml;
+        document.getElementById('d_playIcon').innerHTML = playSVGHtml;
+        
+        document.getElementById('timerBtn').classList.remove('active');
+        document.getElementById('d_timerBtn').classList.remove('active');
+        document.getElementById('timerLabel').textContent = 'Timer';
+        document.getElementById('d_timerLabel').textContent = 'Timer';
+        sleepTimerEnd = null;
+        return;
+      }
+      
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      const label = `${m}:${s.toString().padStart(2,'0')}`;
+      
+      document.getElementById('timerLabel').textContent = label;
+      document.getElementById('d_timerLabel').textContent = label;
+    }
+    
+    tick();
+    sleepTimerInterval = setInterval(tick, 1000);
+    sleepPopupOpen = false;
+    document.getElementById('sleepPopup').classList.remove('show');
+  }
+
+  // --- Listening History Helpers ---
+  function addToHistory(ci, ti) {
+    if (ci < 0 || ci >= collections.length) return;
+    const c = collections[ci];
+    if (ti < 0 || ti >= c.tracks.length) return;
+    const t = c.tracks[ti];
+
+    const item = { collectionId: c.id, trackName: t.name, timestamp: Date.now() };
+    
+    // Remove if it's already in history (so it moves to the top)
+    listeningHistory = listeningHistory.filter(h => !(h.collectionId === c.id && h.trackName === t.name));
+    
+    // Prepend to top
+    listeningHistory.unshift(item);
+    
+    // Enforce max 100 items
+    if (listeningHistory.length > 100) {
+      listeningHistory = listeningHistory.slice(0, 100);
+    }
+    
+    localStorage.setItem('???_history', JSON.stringify(listeningHistory));
+  }
+
+  function clearHistory() {
+    listeningHistory = [];
+    localStorage.setItem('???_history', JSON.stringify(listeningHistory));
+    renderHistoryPage();
+  }
+
+  function formatTimeAgo(timestamp) {
+    const diff = Date.now() - timestamp;
+    if (diff < 60000) {
+      return "Gerade eben";
+    }
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) {
+      return `vor ${mins} Min.`;
+    }
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) {
+      return `vor ${hours} Std.`;
+    }
+    const days = Math.floor(hours / 24);
+    if (days === 1) {
+      return "Gestern";
+    }
+    return `vor ${days} Tagen`;
+  }
+
+  function renderHistoryPage() {
+    const historyPanel = document.getElementById('historyPanel');
+    if (!historyPanel) return;
+
+    if (listeningHistory.length === 0) {
+      historyPanel.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: var(--muted); animation: fadeIn 0.3s ease;">
+          <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 16px; opacity: 0.5;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px;">Dein Hörverlauf ist leer</h3>
+          <p style="font-size: 14px; max-width: 320px; margin: 0 auto; line-height: 1.5;">
+            Sobald du eine Folge startest, wird sie hier aufgelistet, damit du schnell wieder darauf zugreifen kannst.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    let rowsHTML = '';
+    listeningHistory.forEach((item) => {
+      // Find collection by ID, or fallback to index if it's an old entry
+      let c = null;
+      if (item.collectionId) {
+        c = collections.find(col => col.id === item.collectionId);
+      } else if (typeof item.collectionIdx === 'number') {
+        c = collections[item.collectionIdx];
+      }
+      
+      if (!c) return; // Skip if collection not loaded/found
+
+      // Find track index
+      let trackIdx = -1;
+      if (item.trackName) {
+        trackIdx = c.tracks.findIndex(tr => tr.name === item.trackName);
+      } else if (typeof item.trackIdx === 'number') {
+        trackIdx = item.trackIdx;
+      }
+      
+      if (trackIdx < 0 || trackIdx >= c.tracks.length) return;
+      const t = c.tracks[trackIdx];
+      if (!t) return;
+
+      const timeAgo = formatTimeAgo(item.timestamp);
+      const globalIdx = collections.indexOf(c);
+
+      rowsHTML += `
+        <div class="history-item-row" onclick="playTrack(${globalIdx}, ${trackIdx})">
+          <div class="history-item-left">
+            <img src="${c.cover}" alt="Cover" class="history-item-cover" onerror="this.src='https://placehold.co/128'">
+            <div class="history-item-details">
+              <span class="history-item-title">${t.title}</span>
+              <span class="history-item-subtitle">${c.title}</span>
+            </div>
+          </div>
+          <div class="history-item-right">
+            <span class="history-time">${timeAgo}</span>
+            <div class="history-play-circle">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    historyPanel.innerHTML = `
+      <div class="history-list-container">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 14px; color: var(--muted);">${listeningHistory.length} Einträge im Verlauf</span>
+          <button class="btn-action" style="padding: 6px 12px; font-size: 12px; background: rgba(255, 46, 84, 0.1); border-color: rgba(255, 46, 84, 0.2); color: #ff2e54;" onclick="clearHistory(); event.stopPropagation();">
+            Verlauf löschen
+          </button>
+        </div>
+        ${rowsHTML}
+      </div>
+    `;
+  }
+
+  // Load everything
+  window.onload = init;
+</script>
+</body>
+</html>
